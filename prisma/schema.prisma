@@ -1,0 +1,60 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model product_desciption {
+  id              BigInt  @id @default(autoincrement())
+  swedish         String?
+  initial_dt      String?
+  product_id      Int?    @db.SmallInt
+  gpt_translation String?
+  google_trans    String?
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model products {
+  id                      BigInt           @id @default(autoincrement())
+  title                   String?
+  url_handle              String?
+  description             String?
+  no_login_price          Float?
+  buy_price               Float?
+  sales_price             Int?
+  currency_sign           String?
+  currency                String?
+  in_stock                Boolean?
+  image_urls              String[]
+  sku                     String?
+  shelf_space             String?
+  specification           String?
+  shipping_class          String?
+  max_shipping_weight     Int?
+  option_name             String?
+  option_values           Json[]           @db.Json
+  created_at              DateTime?        @default(dbgenerated("timezone('utc'::text, now())")) @db.Timestamptz(6)
+  updated_at              DateTime?        @default(dbgenerated("timezone('utc'::text, now())")) @db.Timestamptz(6)
+  action_required         action_required?
+  original_title          String?
+  original_description    String?
+  original_specification  String?
+  original_shipping_class String?
+  original_option_name    String?
+  weight_unit             String?
+  actual_weight           Float?
+
+  @@index([sku])
+  @@index([url_handle])
+}
+
+enum action_required {
+  create
+  update
+  delete
+}

@@ -7,6 +7,9 @@ import generateProductSetInput from "../helpers/generateProductSetInput.js";
 // Flag to track if a refresh operation is currently running
 let isRefreshInProgress = false;
 
+// Helper function to create a delay
+const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
 const refreshShopify = async (req, res) => {
   // Check if a refresh is already in progress
   if (isRefreshInProgress) {
@@ -59,9 +62,10 @@ const refreshShopify = async (req, res) => {
       for (const product of productBatch) {
         const variables = generateProductSetInput(product);
 
-        console.time(`product-${product.title}`);
         const response = await client.request(operation, { variables });
-        console.timeEnd(`product-${product.title}`);
+
+        // Add a delay of 1 second after each Shopify request
+        await sleep(1000);
 
         fs.appendFileSync(
           `response-${new Date().toISOString().split("T")[0]}.jsonl`,
@@ -71,21 +75,33 @@ const refreshShopify = async (req, res) => {
         processedCount++;
       }
 
+      // Update action_required to null for all products in this batch
+      const productIds = productBatch.map((product) => product.id);
+      await prisma.products.updateMany({
+        where: {
+          id: {
+            in: productIds,
+          },
+        },
+        data: {
+          action_required: null,
+        },
+      });
+
+      console.log(
+        `Set action_required to null for ${productIds.length} products`
+      );
+
       // Move to the next batch
       skip += batchSize;
       console.log(`Processed ${processedCount} products so far`);
     }
 
-    await prisma.$disconnect();
     console.log("All products have been successfully updated in Shopify");
   } catch (error) {
     console.error("Error refreshing products:", error);
-    try {
-      await prisma.$disconnect();
-    } catch (error) {
-      console.error("Error disconnecting from database:", error);
-    }
   } finally {
+    await prisma.$disconnect();
     // Always reset the flag when the operation completes, whether successful or not
     isRefreshInProgress = false;
   }

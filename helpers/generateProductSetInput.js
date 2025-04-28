@@ -79,34 +79,34 @@ const generateProductSetInput = (product) => {
                     },
                   }
                 : null,
-              inventoryPolicy: option.in_stock ? "CONTINUE" : "DENY",
-              metafields: [
-                {
-                  key: "shelf_space",
-                  namespace: "custom",
-                  value: option.shelf_space || "",
-                  type: "single_line_text_field",
-                },
-                {
-                  key: "specification",
-                  namespace: "custom",
-                  value: product.specification || "",
-                  type: "single_line_text_field",
-                },
-                {
-                  key: "shipping_class",
-                  namespace: "custom",
-                  value: product.shipping_class || "",
-                  type: "single_line_text_field",
-                },
-                {
-                  key: "shipping_class_weight",
-                  namespace: "custom",
-                  value: product.max_shipping_weight.toString() || "",
-                  type: "single_line_text_field",
-                },
-              ],
             },
+            inventoryPolicy: option.in_stock ? "CONTINUE" : "DENY",
+            metafields: [
+              {
+                key: "shelf_space",
+                namespace: "custom",
+                value: option.shelf_space || "",
+                type: "single_line_text_field",
+              },
+              {
+                key: "specification",
+                namespace: "custom",
+                value: product.specification || "",
+                type: "single_line_text_field",
+              },
+              {
+                key: "shipping_class",
+                namespace: "custom",
+                value: product.shipping_class || "",
+                type: "single_line_text_field",
+              },
+              {
+                key: "shipping_class_weight",
+                namespace: "custom",
+                value: product.max_shipping_weight.toString() || "",
+                type: "single_line_text_field",
+              },
+            ],
           };
         })
       : [

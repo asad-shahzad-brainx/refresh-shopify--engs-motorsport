@@ -1,3 +1,5 @@
+import getWholesaleTag from "./getWholesaleTag.js";
+
 /**
  * @typedef {Object} Product
  * @property {BigInt} id - Unique identifier
@@ -28,9 +30,10 @@
  * @property {string|null} original_option_name - Original option name
  * @property {string|null} weight_unit - Weight measurement unit
  * @property {number|null} actual_weight - Actual product weight
+ * @property {string[]|null} tags - Array of product tags
  */
 
-const generateProductSetInput = (product) => {
+const generateProductSetInput = async (product) => {
   const identifier =
     product.action_required === "update" || product.action_required === "delete"
       ? {
@@ -80,8 +83,14 @@ const generateProductSetInput = (product) => {
                   }
                 : null,
             },
-            inventoryPolicy: option.in_stock ? "CONTINUE" : "DENY",
+            inventoryPolicy: "CONTINUE",
             metafields: [
+              {
+                key: "in_stock",
+                namespace: "custom",
+                value: option.in_stock ? "true" : "false",
+                type: "boolean",
+              },
               {
                 key: "shelf_space",
                 namespace: "custom",
@@ -131,8 +140,14 @@ const generateProductSetInput = (product) => {
                   }
                 : null,
             },
-            inventoryPolicy: product.in_stock ? "CONTINUE" : "DENY",
+            inventoryPolicy: "CONTINUE",
             metafields: [
+              {
+                key: "in_stock",
+                namespace: "custom",
+                value: product.in_stock ? "true" : "false",
+                type: "boolean",
+              },
               {
                 key: "shelf_space",
                 namespace: "custom",
@@ -163,6 +178,10 @@ const generateProductSetInput = (product) => {
           },
         ];
 
+  const wholesaleTag = identifier
+    ? await getWholesaleTag(product.url_handle)
+    : "wholesale::18";
+
   return {
     identifier,
     input: {
@@ -174,7 +193,11 @@ const generateProductSetInput = (product) => {
       })),
       handle: product.url_handle,
       status: "ACTIVE",
-      tags: product.shipping_class || "",
+      tags: [
+        wholesaleTag,
+        product.shipping_class,
+        ...(product.tags || []),
+      ].filter(Boolean),
       productOptions,
       variants,
     },

@@ -42,8 +42,16 @@ const refreshShopify = async (req, res) => {
     while (hasMoreProducts) {
       // Fetch a batch of products
       const productBatch = await prisma.products.findMany({
-        take: batchSize,
+        where: {
+          action_required: {
+            not: null,
+          },
+        },
+        orderBy: {
+          id: "asc",
+        },
         skip: skip,
+        take: batchSize,
       });
 
       if (productBatch.length === 0) {
@@ -60,8 +68,7 @@ const refreshShopify = async (req, res) => {
 
       // Process each product in the current batch
       for (const product of productBatch) {
-        const variables = generateProductSetInput(product);
-
+        const variables = await generateProductSetInput(product);
         const response = await client.request(operation, { variables });
 
         // Add a delay of 1 second after each Shopify request
@@ -105,13 +112,6 @@ const refreshShopify = async (req, res) => {
     // Always reset the flag when the operation completes, whether successful or not
     isRefreshInProgress = false;
   }
-};
-
-// Add a function to check the status of the refresh operation
-export const getRefreshStatus = () => {
-  return {
-    isRefreshInProgress,
-  };
 };
 
 export default refreshShopify;
